@@ -11,7 +11,7 @@ type ProductsContexProps = {
     categoryId: string,
     productName: string,
     productId: string,
-  ) => Promise<void>;
+  ) => Promise<Producto>;
   deleteProduct: (id: string) => Promise<void>;
   loadProductById: (id: string) => Promise<Producto>;
   uploadImage: (data: any, id: string) => Promise<void>;
@@ -32,12 +32,16 @@ export const ProductsProvider = ({children}: any) => {
     setProducts([...resp.data.productos]);
   };
 
-  const addProduct = async (categoryId: string, productName: string) => {
+  const addProduct = async (
+    categoryId: string,
+    productName: string,
+  ): Promise<Producto> => {
     const resp = await cafeApi.post<Producto>('/productos', {
       nombre: productName,
       categoria: categoryId,
     });
     setProducts([...products, resp.data]);
+    return resp.data;
   };
 
   const updateProduct = async (
@@ -59,9 +63,7 @@ export const ProductsProvider = ({children}: any) => {
   };
 
   const deleteProduct = async (id: string) => {
-    const resp = await cafeApi.delete<Producto>(`/productos/${id}`);
-    // setProducts(products.filter(item => item._id !== id));
-    return resp.data;
+    await cafeApi.delete<Producto>(`/productos/${id}`);
   };
 
   const loadProductById = async (id: string): Promise<Producto> => {
@@ -70,7 +72,9 @@ export const ProductsProvider = ({children}: any) => {
     return resp.data;
   };
 
-  const uploadImage = async (data: any, id: string) => {};
+  const uploadImage = async (data: any, id: string) => {
+    console.log(data, id);
+  };
 
   return (
     <ProductsContext.Provider

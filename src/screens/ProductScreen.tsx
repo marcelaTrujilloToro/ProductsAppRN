@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, {useContext, useEffect} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   Button,
   Image,
@@ -16,12 +16,15 @@ import {Picker} from '@react-native-picker/picker';
 import {useCategories} from '../hooks/useCategories';
 import {useForm} from '../hooks/useForm';
 import {ProductsContext} from '../context/productsContext';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 interface Props
   extends StackScreenProps<ProductsStackParams, 'ProductScreen'> {}
 
 export const ProductScreen = ({navigation, route}: Props) => {
   const {id = '', name = ''} = route.params;
+
+  const [tempUri, setTempUri] = useState<string>();
 
   const {categories} = useCategories();
 
@@ -73,6 +76,25 @@ export const ProductScreen = ({navigation, route}: Props) => {
       deleteProduct(id);
     }
   };
+
+  const takePhoto = () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        quality: 0.5,
+      },
+      resp => {
+        if (resp.didCancel) {
+          return;
+        }
+        if (!resp.assets?.uri) {
+          return;
+        }
+
+        setTempUri(resp.assets?.uri);
+      },
+    );
+  };
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -110,13 +132,20 @@ export const ProductScreen = ({navigation, route}: Props) => {
               justifyContent: 'space-around',
               marginTop: 10,
             }}>
-            <Button title="Cámara" color="#5856D6" onPress={() => {}} />
+            <Button title="Cámara" color="#5856D6" onPress={takePhoto} />
             <Button title="Galería" color="#5856D6" onPress={() => {}} />
           </View>
         )}
-        {img.length > 0 && (
+        {img.length > 0 && !tempUri && (
           <Image
             source={{uri: img}}
+            style={{width: '100%', height: 300, marginTop: 20}}
+          />
+        )}
+
+        {tempUri && (
+          <Image
+            source={{uri: tempUri}}
             style={{width: '100%', height: 300, marginTop: 20}}
           />
         )}
