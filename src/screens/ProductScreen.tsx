@@ -1,8 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {
   Button,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,52 +14,112 @@ import {StackScreenProps} from '@react-navigation/stack';
 import {ProductsStackParams} from '../navigator/ProductsNavigator';
 import {Picker} from '@react-native-picker/picker';
 import {useCategories} from '../hooks/useCategories';
+import {useForm} from '../hooks/useForm';
+import {ProductsContext} from '../context/productsContext';
 
 interface Props
   extends StackScreenProps<ProductsStackParams, 'ProductScreen'> {}
 
 export const ProductScreen = ({navigation, route}: Props) => {
-  const {id, name = ''} = route.params;
+  const {id = '', name = ''} = route.params;
 
   const {categories} = useCategories();
 
-  const [selectedLanguage, setSelectedLanguage] = useState();
+  const {loadProductById, addProduct, updateProduct, deleteProduct} =
+    useContext(ProductsContext);
+
+  const {_id, categoriaId, nombre, img, onChange, setFormValue} = useForm({
+    _id: id,
+    categoriaId: '',
+    nombre: name,
+    img: '',
+  });
 
   useEffect(() => {
     navigation.setOptions({
-      title: name ? name : 'Nuevo producto',
+      title: nombre ? nombre : 'Sin nombre del producto',
     });
+  }, [nombre]);
+
+  useEffect(() => {
+    loadProduct();
   }, []);
 
+  const loadProduct = async () => {
+    if (id.length === 0) {
+      return;
+    }
+    const product = await loadProductById(id);
+    setFormValue({
+      _id: _id,
+      categoriaId: product.categoria._id,
+      nombre: name,
+      img: product.img || '',
+    });
+  };
+
+  const saveOrUpdate = async () => {
+    if (id.length > 0) {
+      updateProduct(categoriaId, nombre, id);
+    } else {
+      const tempCategoriaId = categoriaId || categories[0]._id;
+      const newProduct = await addProduct(tempCategoriaId, nombre);
+      onChange(newProduct._id, '_id');
+    }
+  };
+
+  const deleteProd = async () => {
+    if (id.length > 0) {
+      deleteProduct(id);
+    }
+  };
   return (
     <View style={styles.container}>
       <ScrollView>
         <Text style={styles.label}>Nombre del producto: </Text>
-        <TextInput placeholder="Producto" style={styles.textInput} />
+        <TextInput
+          placeholder="Producto"
+          style={styles.textInput}
+          value={nombre}
+          onChangeText={value => onChange(value, 'nombre')}
+        />
 
         <Text style={styles.label}>Categoria: </Text>
 
         <Picker
-          selectedValue={selectedLanguage}
-          onValueChange={(itemValue, itemIndex) =>
-            setSelectedLanguage(itemValue)
-          }>
-          {categories.map(c => (
-            <Picker.Item label={c.nombre} value={c._id} key={c._id} />
+          selectedValue={categoriaId}
+          onValueChange={itemValue => onChange(itemValue, 'categoriaId')}>
+          {categories.map(category => (
+            <Picker.Item
+              label={category.nombre}
+              value={category._id}
+              key={category._id}
+            />
           ))}
         </Picker>
 
-        <Button title="Guardar" color="#5856D6" onPress={() => {}} />
+        <Button title="Guardar" color="#5856D6" onPress={saveOrUpdate} />
+        {_id.length > 0 && (
+          <Button title="Eliminar" color="red" onPress={deleteProd} />
+        )}
 
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-around',
-            marginTop: 10,
-          }}>
-          <Button title="Cámara" color="#5856D6" onPress={() => {}} />
-          <Button title="Galería" color="#5856D6" onPress={() => {}} />
-        </View>
+        {_id.length > 0 && (
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              marginTop: 10,
+            }}>
+            <Button title="Cámara" color="#5856D6" onPress={() => {}} />
+            <Button title="Galería" color="#5856D6" onPress={() => {}} />
+          </View>
+        )}
+        {img.length > 0 && (
+          <Image
+            source={{uri: img}}
+            style={{width: '100%', height: 300, marginTop: 20}}
+          />
+        )}
       </ScrollView>
     </View>
   );
