@@ -116,6 +116,7 @@ export const ProductScreen = ({navigation, route}: Props) => {
           return;
         }
 
+        // por algun motivo assets es un array, si no se usa la posicion 0 siempre retorna undefined
         setTempUri(resp.assets[0].uri);
         uploadImage(resp, _id);
       },

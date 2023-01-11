@@ -75,11 +75,11 @@ export const ProductsProvider = ({children}: any) => {
 
   const uploadImage = async (data: ImagePickerResponse, id: string) => {
     const fileToUpload = {
+      // por algun motivo assets es un array, si no se usa la posicion 0 siempre retorna undefined
       uri: data.assets[0].uri,
       type: data.assets[0].type,
       name: data.assets[0].fileName,
     };
-    console.log(fileToUpload);
 
     const formData = new FormData();
     formData.append('archivo', fileToUpload);
