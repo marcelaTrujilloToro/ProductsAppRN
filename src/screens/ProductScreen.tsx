@@ -28,8 +28,13 @@ export const ProductScreen = ({navigation, route}: Props) => {
 
   const {categories} = useCategories();
 
-  const {loadProductById, addProduct, updateProduct, deleteProduct} =
-    useContext(ProductsContext);
+  const {
+    loadProductById,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    uploadImage,
+  } = useContext(ProductsContext);
 
   const {_id, categoriaId, nombre, img, onChange, setFormValue} = useForm({
     _id: id,
@@ -92,9 +97,31 @@ export const ProductScreen = ({navigation, route}: Props) => {
         }
 
         setTempUri(resp.assets?.uri);
+        uploadImage(resp, _id);
       },
     );
   };
+
+  const takePhotoFromGallery = () => {
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        quality: 0.5,
+      },
+      resp => {
+        if (resp.didCancel) {
+          return;
+        }
+        if (!resp) {
+          return;
+        }
+
+        setTempUri(resp.assets[0].uri);
+        uploadImage(resp, _id);
+      },
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -133,7 +160,11 @@ export const ProductScreen = ({navigation, route}: Props) => {
               marginTop: 10,
             }}>
             <Button title="Cámara" color="#5856D6" onPress={takePhoto} />
-            <Button title="Galería" color="#5856D6" onPress={() => {}} />
+            <Button
+              title="Galería"
+              color="#5856D6"
+              onPress={takePhotoFromGallery}
+            />
           </View>
         )}
         {img.length > 0 && !tempUri && (

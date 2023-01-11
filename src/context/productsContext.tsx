@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {createContext, useEffect, useState} from 'react';
+import {ImagePickerResponse} from 'react-native-image-picker';
 import cafeApi from '../api/cafeApi';
 import {Producto, ProductsResponse} from '../types/appInterfaces';
 
@@ -72,8 +73,23 @@ export const ProductsProvider = ({children}: any) => {
     return resp.data;
   };
 
-  const uploadImage = async (data: any, id: string) => {
-    console.log(data, id);
+  const uploadImage = async (data: ImagePickerResponse, id: string) => {
+    const fileToUpload = {
+      uri: data.assets[0].uri,
+      type: data.assets[0].type,
+      name: data.assets[0].fileName,
+    };
+    console.log(fileToUpload);
+
+    const formData = new FormData();
+    formData.append('archivo', fileToUpload);
+
+    try {
+      const resp = await cafeApi.put(`/uploads/productos/${id}`, formData);
+      console.log(resp);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
